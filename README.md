@@ -1,24 +1,69 @@
-# Smart Parking & Traffic Intelligence System
+# Smart Parking & Traffic Intelligence (Frontend)
 
-Modern, responsive web app with FastAPI backend and React frontend. Demo-focused with explainable results and clear architecture.
+React (Vite) single-page app for uploading videos, triggering analysis, and visualizing results.
 
-## Tech Stack
-- Frontend: React (Vite), Recharts, Bootstrap (CDN)
-- Backend: Python (FastAPI), Ultralytics YOLOv8
-- Video Upload Support: MP4
+## Setup
 
-## Workflow
-- Upload MP4 on Upload page
-- Analyze on Analysis page (auto-fills last uploaded path)
-- See overlay (if saved), live counts, smoothed graph, congestion, parking recommendation, and XAI explanation
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Alignment with Congestion.ipynb
-- Uses rolling mean smoothing (default window=5)
-- Congestion thresholds: ≤5 → Low, ≤20 → Medium, else High
-- Parking score uses 95th percentile baseline with explicit penalties: High=30, Medium=10, Low=0
-- XAI explanation strings mirror the notebook logic
+The dev server proxies API calls from `/api/*` to `http://localhost:8000`.
+Run the backend with:
 
-## Demo Tips
-- Use short clips (10–30s) for quick analysis
-- Ensure `backend/models/best.pt` exists for trained detection; otherwise demo with `yolov8n.pt`
-- Annotated outputs are copied to `backend/outputs`
+```bash
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Logo
+
+- Place your PNG logo at `frontend/public/traffic-jam-alert.png`.
+- The header will automatically render it; if the file is missing the UI falls back to a chip with an emoji.
+
+## Pages
+- Home — project intro, pipeline overview, upload button.
+- Upload — MP4 upload, preview, and "Analyze Traffic" action.
+- Analysis — annotated video overlay, live vehicle count chart (raw + smoothed), congestion badge, parking recommendation, XAI explanation.
+- Architecture — system diagram and explainability notes.
+- Performance — advantages, limitations, future scope.
+
+## Notes
+- Styling via Bootstrap CDN; color-coded congestion badges.
+- Charts via Recharts.
+- The app stores the last uploaded server `video_path` in `localStorage` to streamline analysis.
+
+## Firebase Integration (Optional)
+
+Add Google Firebase to enable Google Sign-In and store chat messages in Firestore.
+
+1) Install SDK
+
+```bash
+cd frontend
+npm install firebase
+```
+
+2) Configure environment
+
+Create `frontend/.env` with your Firebase app keys (use values from Firebase Console → Project Settings):
+
+```
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
+VITE_FIREBASE_APP_ID=1:1234567890:web:abcdef123456
+```
+
+3) What it does
+
+- Adds Google Sign-In button in the chat widget header.
+- Saves chat messages to Firestore `chats` collection with fields: `uid`, `role`, `content`, `context`, `ts`.
+- Non-blocking: if Firestore write fails, chat continues.
+
+4) Backend token verification (advanced)
+
+If you want to secure API calls with Firebase Auth tokens, set an `Authorization: Bearer <idToken>` header in the frontend and verify it in the FastAPI backend using `firebase-admin`. This project does not require it by default.
